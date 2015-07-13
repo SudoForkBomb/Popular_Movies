@@ -58,10 +58,7 @@ public class DetailsActivityFragment extends Fragment {
                 ((TextView) rootView.findViewById(R.id.releaseDateTextView)).setText(releaseDateString);
 
             RatingBar ratingBar = (RatingBar) rootView.findViewById(R.id.ratingBar);
-
-
-            //LayerDrawable stars = (LayerDrawable) ratingBar.getProgressDrawable();
-            //stars.getDrawable(2).setColorFilter(Color.YELLOW, PorterDuff.Mode.SRC_ATOP);
+            
             ratingBar.setRating((float) (ratingInt/2.0));
 
         }
