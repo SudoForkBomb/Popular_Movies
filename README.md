@@ -5,6 +5,7 @@ This project is all my own work.
 I receieved help from the following resources and also any image files.
 Udacity Developing Android Apps: Fundamentals Lessons 1-3,
 Google Android Developer Docs,
+StackOverFlow,
 and The Udacity team for the video sessions.
 
 Help with my ratingBar images: https://code.google.com/p/android/issues/detail?id=162419
