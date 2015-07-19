@@ -58,7 +58,7 @@ public class DetailsActivityFragment extends Fragment {
                 ((TextView) rootView.findViewById(R.id.releaseDateTextView)).setText(releaseDateString);
 
             RatingBar ratingBar = (RatingBar) rootView.findViewById(R.id.ratingBar);
-            
+
             ratingBar.setRating((float) (ratingInt/2.0));
 
         }

@@ -3,6 +3,7 @@ package com.crtaylor123.popularmovies;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,14 +31,13 @@ import java.util.List;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainActivityFragment extends Fragment {
+public class MainActivityFragment extends Fragment implements OnTaskCompleted{
 
     /*
         API Key for TheMovieDatabase (www.themoviedb.org)
         Fill in with your own API Key.
      */
-
-    private String apiKey;
+    private String apiKey = "";
 
 
     MovieAdapter movieAdapter;
@@ -45,29 +45,47 @@ public class MainActivityFragment extends Fragment {
     Toast mAppToast;
     String TMDB_sort_popularity = "sort_by=popularity.desc";
     String TMDB_sort_rating = "sort_by=vote_average.desc";
-    static String TMDB_choice = "sort_by=popularity.desc";
+    static String TMDB_default = "sort_by=popularity.desc";
+    String TMDB_choice;
+
+
+
     public MainActivityFragment() {
     }
 
     /*
-        Method used for running the GetMovies class and updating the GridView layout.
+        Checks to see if there if the savedInstanceState is null or if it doesn't contain the ArrayList of Movies.
+        If it is either null or doesn't have contain the movies, it creates a new ArrayList and sets the TMDB_choice to the default search.
+        Else, it restores the ArrayList of Movies and restores the TMDB_choice.
      */
-    private void updateMovies(String sort){
-        GetMoviesTask moviesTask = new GetMoviesTask();
-        moviesTask.execute(sort);
-
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+        if (savedInstanceState == null || !savedInstanceState.containsKey("key")){
+            movieResults = new ArrayList<Movie>();
+            TMDB_choice = TMDB_default;
+        }
+        else {
+            movieResults = savedInstanceState.getParcelableArrayList("key");
+            TMDB_choice = savedInstanceState.getString("choice");
+        }
     }
 
+    /*
+        Stores the TMDB_choice with the key "choice" and the movieResults with key "key".
+     */
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState){
+        savedInstanceState.putString("choice", TMDB_choice);
+        savedInstanceState.putParcelableArrayList("key", (ArrayList<? extends Parcelable>) movieResults);
+        super.onSaveInstanceState(savedInstanceState);
+    }
 
     /*
         Handles the menu button selections.
-        Assigns the choice to a static String, TMDB_choice, for when the Activity is recreated during a rotation.
+        Assigns the TMDB_choice to a static String, TMDB_default, for when the Activity is recreated during a rotation.
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -75,24 +93,30 @@ public class MainActivityFragment extends Fragment {
 
         if (id == R.id.menu_popularity) {
             TMDB_choice = "sort_by=popularity.desc";
-            updateMovies(TMDB_sort_popularity);
+            updateMovies();
             return true;
         }
 
         if (id == R.id.menu_rating) {
             TMDB_choice = "sort_by=vote_average.desc";
-            updateMovies(TMDB_sort_rating);
+            updateMovies();
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
+    /*
+    Method used for running the GetMovies class and updating the GridView layout.
+ */
+    private void updateMovies(){
+        GetMoviesTask moviesTask = new GetMoviesTask(this);
+        moviesTask.execute(TMDB_choice);
+    }
 
     @Override
     public void onStart() {
-        GetMoviesTask moviesTask = new GetMoviesTask();
-        moviesTask.execute(TMDB_choice);
         super.onStart();
+        updateMovies();
     }
 
     /*
@@ -107,10 +131,10 @@ public class MainActivityFragment extends Fragment {
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        GridView gridView = (GridView) rootView.findViewById(R.id.gridView_movie);
-        movieResults = new ArrayList<Movie>();
         movieAdapter = new MovieAdapter(getActivity(), movieResults);
-        gridView.setAdapter(movieAdapter);
+
+        GridView gridView = (GridView) rootView.findViewById(R.id.gridView_movie);
+         gridView.setAdapter(movieAdapter);
 
 
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -118,7 +142,7 @@ public class MainActivityFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View v,
                                     int position, long id) {
 
-                String movieTitle = movieResults.get(position).getTitle();
+                //String movieTitle = movieResults.get(position).getTitle();
 
                 Intent detailIntent = new Intent(getActivity(), DetailsActivity.class);
                 Bundle extras = new Bundle();
@@ -130,15 +154,23 @@ public class MainActivityFragment extends Fragment {
                 extras.putString("EXTRA_BACKDROP", movieResults.get(position).getBackdropPath());
                 detailIntent.putExtras(extras);
                 startActivity(detailIntent);
-
             }
         });
-
-
         return rootView;
-
     }
 
+    /*
+        Listener that is called at on PostExecute, at the end of the AsyncTask.
+    */
+    @Override
+    public void onTaskCompeleted(List<Movie> result) {
+        if (result != null) {
+            movieAdapter.clear();
+            for (Movie movie : result) {
+                movieAdapter.add(movie);
+            }
+        }
+    }
 
     /*
         Starts an AsyncTask task that fetches the TMDB JSON file in the Background.
@@ -146,13 +178,15 @@ public class MainActivityFragment extends Fragment {
      */
 
     public class GetMoviesTask extends AsyncTask<String, Void, List<Movie>> {
-
         private final String LOG_TAG = GetMoviesTask.class.getSimpleName();
+        private OnTaskCompleted listener;
+
+        public GetMoviesTask(OnTaskCompleted listener){
+            this.listener = listener;
+        }
 
         //URL Strings
         final String TMDB_base_url = "http://api.themoviedb.org/3/discover/movie?";
-
-
 
         /*
             Method that parses the JSON Text.
@@ -278,17 +312,12 @@ public class MainActivityFragment extends Fragment {
         }//End of doInBackground
 
         /*
+            Calls onTaskComleteted Listener to complete task outside of the Background Thread.
             Takes resulting ArrayList of movies and adds them to the movieAdapter.
          */
         @Override
         protected void onPostExecute (List<Movie> result) {
-            if (result != null) {
-                movieAdapter.clear();
-                for (Movie movie : result) {
-                    movieAdapter.add(movie);
-                }
-
-            }
+            listener.onTaskCompeleted(result);
         }//End of onPostExecute
     }//End of getMovieDataFromJson
 }//End of MainActivityFragment
