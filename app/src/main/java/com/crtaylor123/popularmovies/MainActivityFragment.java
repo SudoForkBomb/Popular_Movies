@@ -1,54 +1,45 @@
 package com.crtaylor123.popularmovies;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
-import android.widget.Toast;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import retrofit.Callback;
+import retrofit.RestAdapter;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainActivityFragment extends Fragment implements OnTaskCompleted{
+public class MainActivityFragment extends Fragment{
 
     /*
         API Key for TheMovieDatabase (www.themoviedb.org)
         Fill in with your own API Key.
      */
-    private String apiKey = "";
+    static final public String apiKey = "";
 
 
     MovieAdapter movieAdapter;
     List<Movie> movieResults;
-    Toast mAppToast;
-    String TMDB_sort_popularity = "sort_by=popularity.desc";
-    String TMDB_sort_rating = "sort_by=vote_average.desc";
-    static String TMDB_default = "sort_by=popularity.desc";
+    String TMDB_sort_popularity = "popularity.desc";
+    String TMDB_sort_rating = "vote_average.desc";
+    static String TMDB_default = "popularity.desc";
     String TMDB_choice;
-
-
 
     public MainActivityFragment() {
     }
@@ -78,9 +69,10 @@ public class MainActivityFragment extends Fragment implements OnTaskCompleted{
      */
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState){
+        super.onSaveInstanceState(savedInstanceState);
         savedInstanceState.putString("choice", TMDB_choice);
         savedInstanceState.putParcelableArrayList("key", (ArrayList<? extends Parcelable>) movieResults);
-        super.onSaveInstanceState(savedInstanceState);
+
     }
 
     /*
@@ -92,13 +84,13 @@ public class MainActivityFragment extends Fragment implements OnTaskCompleted{
         int id = item.getItemId();
 
         if (id == R.id.menu_popularity) {
-            TMDB_choice = "sort_by=popularity.desc";
+            TMDB_choice = TMDB_sort_popularity;
             updateMovies();
             return true;
         }
 
         if (id == R.id.menu_rating) {
-            TMDB_choice = "sort_by=vote_average.desc";
+            TMDB_choice = TMDB_sort_rating;
             updateMovies();
             return true;
         }
@@ -109,8 +101,9 @@ public class MainActivityFragment extends Fragment implements OnTaskCompleted{
     Method used for running the GetMovies class and updating the GridView layout.
  */
     private void updateMovies(){
-        GetMoviesTask moviesTask = new GetMoviesTask(this);
-        moviesTask.execute(TMDB_choice);
+        getMoviesRetrofit(TMDB_choice);
+        /*GetMoviesTask moviesTask = new GetMoviesTask(this);
+        moviesTask.execute(TMDB_choice);*/
     }
 
     @Override
@@ -126,200 +119,86 @@ public class MainActivityFragment extends Fragment implements OnTaskCompleted{
         Defines what happens when the user clicks on the movie posters.
      */
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         movieAdapter = new MovieAdapter(getActivity(), movieResults);
-
         GridView gridView = (GridView) rootView.findViewById(R.id.gridView_movie);
-         gridView.setAdapter(movieAdapter);
-
+        gridView.setAdapter(movieAdapter);
 
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             public void onItemClick(AdapterView<?> parent, View v,
                                     int position, long id) {
 
-                //String movieTitle = movieResults.get(position).getTitle();
-
+                final Movie selectedMovie = movieResults.get(position);
                 Intent detailIntent = new Intent(getActivity(), DetailsActivity.class);
-                Bundle extras = new Bundle();
-                extras.putString("EXTRA_TITLE", movieResults.get(position).getTitle());
-                extras.putString("EXTRA_POSTER", movieResults.get(position).getPosterPath());
-                extras.putString("EXTRA_SYNOPSIS", movieResults.get(position).getSynopsis());
-                extras.putDouble("EXTRA_RATING", movieResults.get(position).getRating());
-                extras.putString("EXTRA_RELEASEDATE", movieResults.get(position).getReleaseDate());
-                extras.putString("EXTRA_BACKDROP", movieResults.get(position).getBackdropPath());
-                detailIntent.putExtras(extras);
+                detailIntent.putExtra("movie", selectedMovie);
                 startActivity(detailIntent);
             }
         });
+
         return rootView;
     }
 
     /*
-        Listener that is called at on PostExecute, at the end of the AsyncTask.
+        Uses the Retrofit library to fetch the TMDB JSON file in the Background.
+        Adds each movie to the movieAdapter on success.
     */
-    @Override
-    public void onTaskCompeleted(List<Movie> result) {
-        if (result != null) {
-            movieAdapter.clear();
-            for (Movie movie : result) {
-                movieAdapter.add(movie);
-            }
-        }
-    }
+    public void getMoviesRetrofit(String sortChoice){
 
-    /*
-        Starts an AsyncTask task that fetches the TMDB JSON file in the Background.
-        Adds each movie to the movieAdapter in the PostExecute.
-     */
+        RestAdapter restAdapter = new RestAdapter.Builder()
+                .setEndpoint("http://api.themoviedb.org/3")
+                .build();
 
-    public class GetMoviesTask extends AsyncTask<String, Void, List<Movie>> {
-        private final String LOG_TAG = GetMoviesTask.class.getSimpleName();
-        private OnTaskCompleted listener;
+        Map movieMap = new HashMap<>();
+        movieMap.put("sort_by", sortChoice);
+        movieMap.put("api_key", apiKey);
 
-        public GetMoviesTask(OnTaskCompleted listener){
-            this.listener = listener;
-        }
+        final MovieAPI movieAPI = restAdapter.create(MovieAPI.class);
+        movieAPI.getMovie(movieMap, new Callback<ResultsMovie>() {
 
-        //URL Strings
-        final String TMDB_base_url = "http://api.themoviedb.org/3/discover/movie?";
+            @Override
+            public void success(ResultsMovie resultsMovie, Response response) {
+                if (resultsMovie != null) {
+                    movieAdapter.clear();
+                    for (final Movie movie : resultsMovie.getResults()) {
+                        movieAPI.getTrailer(movie.getId(), apiKey, new Callback<ResultsTrailer>() {
+                            @Override
+                            public void success(ResultsTrailer resultsTrailer, Response response) {
+                                movie.setTrailers(resultsTrailer.getResults());
+                            }
 
-        /*
-            Method that parses the JSON Text.
-            Creates a JSONObject based on the 'results', then creates a JSONArray of each individual 'movie.'
-            Then creates a Movie object of each JSONObject in the JSONArray, and adds it to an ArrayList finalMovieList.
-            Finally returns the finalMovieList.
-         */
-        private List<Movie> getMovieDataFromJson(String movieJsonString) throws JSONException {
+                            @Override
+                            public void failure(RetrofitError error) {
 
-            //JSON Node Names
-            final String TMDB_RESULTS = "results";
-            final String TMDB_ID = "id";
-            final String TMDB_TITLE = "original_title";
-            final String TMDB_POSTER = "poster_path";
-            final String TMDB_SYNOPSIS = "overview";
-            final String TMDB_RATING = "vote_average";
-            final String TMDB_RELEASEDATE = "release_date";
-            final String TMDB_BACKDROP = "backdrop_path";
+                            }
+                        });
 
-            //Creates a JSONObject based on the 'results', then creates a JSONArray of each individual 'movie.'
-            JSONObject moviesJson = new JSONObject(movieJsonString);
-            JSONArray movies = moviesJson.getJSONArray(TMDB_RESULTS);
+                        movieAPI.getReview(movie.getId(), apiKey, new Callback<ResultsReview>() {
 
-            //Then creates a Movie object of each JSONObject in the JSONArray, and adds it to an ArrayList finalMovieList.
-            List<Movie> finalMovieList = new ArrayList<Movie>();
+                            @Override
+                            public void success(ResultsReview resultsReview, Response response) {
+                                movie.setReviews(resultsReview.getResults());
+                            }
 
-            for (int i = 0; i < movies.length(); i++) {
-                JSONObject movieObject = movies.getJSONObject(i);
+                            @Override
+                            public void failure(RetrofitError error) {
 
-                int id = movieObject.getInt(TMDB_ID);
-                String title = movieObject.getString(TMDB_TITLE);
-                String posterPath = movieObject.getString(TMDB_POSTER);
-                String synopsis = movieObject.getString(TMDB_SYNOPSIS);
-                double rating = movieObject.getDouble(TMDB_RATING);
-                String releaseDate = movieObject.getString(TMDB_RELEASEDATE);
-                String backdropPath = movieObject.getString(TMDB_BACKDROP);
-
-                finalMovieList.add(new Movie(id, title, posterPath, synopsis, rating, releaseDate, backdropPath));
-            }
-
-            for (Movie i : finalMovieList) {
-                Log.v(LOG_TAG, i.toString());
-            }
-
-            return finalMovieList;
-        }//End of getMovieDataFromJson
-
-
-        /*
-            Background task of GetMovieTask.
-            Opens a HttpURLConnection to TMDB JSON.
-            Brings in JSON text and passes it to a getMovieDataFromJson method.
-         */
-        @Override
-        protected List<Movie> doInBackground(String... params) {
-
-            HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
-
-            // Will contain the raw JSON response as a string.
-            String movieJsonString = null;
-
-            try {
-                //Creates URL to get JSON
-                String fullUrl = TMDB_base_url + TMDB_choice + "&api_key=" + apiKey;
-                Log.v(LOG_TAG, "Built URL " + fullUrl);
-
-                URL url = new URL(fullUrl);
-
-                //Establishes Connection
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-
-                //Brings in JSON text
-                InputStream inputStream = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
-
-                if (inputStream == null) {
-                    return null;
-                }
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-                String line;
-
-                while ((line = reader.readLine()) != null) {
-                    buffer.append(line + "\n");
-                }
-
-                if (buffer.length() == 0) {
-                    return null;
-                }
-                movieJsonString = buffer.toString();
-
-                Log.v(LOG_TAG, "Movie JSON string: " + movieJsonString);
-            }
-            catch(IOException e){
-                Log.e(LOG_TAG, "Error ", e);
-                return null;
-            }
-
-            //Closes the urlConnection and BufferedReader
-            finally{
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (final IOException e) {
-                        Log.e(LOG_TAG, "Error closing stream", e);
+                            }
+                        });
+                        movieAdapter.add(movie);
                     }
                 }
             }
+            @Override
+            public void failure(RetrofitError error) {
 
-            //Calls getMovieDataFromJson method with the JSON text as a parameter.
-            try {
-                return getMovieDataFromJson(movieJsonString);
-            } catch (JSONException e) {
-                Log.e(LOG_TAG, e.getMessage(), e);
-                e.printStackTrace();
             }
-            return null;
-        }//End of doInBackground
-
-        /*
-            Calls onTaskComleteted Listener to complete task outside of the Background Thread.
-            Takes resulting ArrayList of movies and adds them to the movieAdapter.
-         */
-        @Override
-        protected void onPostExecute (List<Movie> result) {
-            listener.onTaskCompeleted(result);
-        }//End of onPostExecute
-    }//End of getMovieDataFromJson
+        });
+    }
 }//End of MainActivityFragment
 
 

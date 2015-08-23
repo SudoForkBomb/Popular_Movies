@@ -2,47 +2,46 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin"
     android:orientation="vertical"
     tools:context="com.crtaylor123.popularmovies.DetailsActivityFragment"
-    android:nestedScrollingEnabled="false"
     android:background="@android:color/black">
 
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                android:id="@+id/synopsisTextView"
+                android:layout_height="0dp"
+                android:id="@+id/titleTextView"
                 android:shadowColor="#000000"
                 android:shadowDx="1.5"
                 android:shadowDy="1.3"
                 android:shadowRadius="1.6"
                 android:textColor="@android:color/white"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentBottom="true" />
-
-            <!--    <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/backdropImageView"
-                    android:layout_alignParentLeft="true"
-                    android:layout_alignParentTop="true"
-                    android:layout_above="@+id/synopsisTextView" />-->
+                android:layout_gravity="left"
+                android:background="@color/android_studio_neon_blue"
+                android:padding="20dp"
+                android:textSize="36sp"
+                android:layout_weight="1" />
 
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/detailedPosterImageView"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentTop="true"
-                android:layout_above="@+id/titleTextView" />
+                android:id="@+id/detailedPosterImageView" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:id="@+id/releaseDateTextView"
+                android:shadowColor="#000000"
+                android:shadowDx="1.5"
+                android:shadowDy="1.3"
+                android:shadowRadius="1.6"
+                android:textColor="@android:color/white"
+                android:singleLine="true" />
 
             <RatingBar
                 android:layout_width="wrap_content"
@@ -50,46 +49,79 @@
                 style="@style/rating_bar"
                 android:id="@+id/ratingBar"
                 android:numStars="5"
-                android:layout_alignParentRight="true"
                 android:isIndicator="true"
-                android:layout_above="@+id/synopsisTextView" />
+                android:layout_weight="1"
+                android:padding="10dp" />
 
-            <RatingBar
-                android:layout_width="wrap_content"
+            <!--<RatingBar-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:id="@+id/borderRatingBar"-->
+                <!--android:numStars="5"-->
+                <!--android:progressBackgroundTint="@android:color/black"-->
+                <!--android:isIndicator="true" />-->
+
+            <Button
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/borderRatingBar"
-                android:numStars="5"
-                android:progressBackgroundTint="@android:color/black"
-                android:layout_alignParentRight="true"
-                android:isIndicator="true"
-                android:layout_above="@+id/synopsisTextView" />
+                android:text="@string/favorites_button_text"
+                android:id="@+id/addToFavoritesButton"
+                android:padding="5dp" />
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:id="@+id/releaseDateTextView"
+                android:id="@+id/synopsisTextView"
                 android:shadowColor="#000000"
                 android:shadowDx="1.5"
                 android:shadowDy="1.3"
                 android:shadowRadius="1.6"
                 android:textColor="@android:color/white"
-                android:layout_alignParentRight="true"
-                android:layout_above="@+id/ratingBar"
-                android:singleLine="true" />
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentBottom="true"
+                android:layout_weight="1" />
+
+            <View
+                android:background="#ffffff"
+                android:layout_width = "fill_parent"
+                android:layout_height="1dip"
+                android:layout_centerVertical ="true" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:id="@+id/titleTextView"
-                android:shadowColor="#000000"
-                android:shadowDx="1.5"
-                android:shadowDy="1.3"
-                android:shadowRadius="1.6"
-                android:textColor="@android:color/white"
-                android:layout_alignParentRight="true"
-                android:layout_above="@+id/releaseDateTextView"
-                android:singleLine="true" />
-        </RelativeLayout>
+                android:id="@+id/trailerTextView"
+                android:text="@string/trailer_text_view"
+                android:textColor="@android:color/white"/>
+
+            <ListView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/trailersListView"
+                android:nestedScrollingEnabled="true" />
+
+            <View
+                android:background="#ffffff"
+                android:layout_width = "fill_parent"
+                android:layout_height="1dip"
+                android:layout_centerVertical ="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:id="@+id/reviewTextView"
+                android:text="@string/review_text_view"
+                android:textColor="@android:color/white"/>
+
+            <ListView
+                android:layout_width="match_parent"
+                android:layout_height="fill_parent"
+                android:id="@+id/reviewsListView"
+                android:divider="@color/android_studio_neon_blue"
+                android:nestedScrollingEnabled="true" />
+
+        </LinearLayout>
 </ScrollView>

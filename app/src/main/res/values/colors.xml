@@ -2,5 +2,6 @@
 <resources>
     <color name="Yellow">#FFFF00</color>
     <color name="android_studio_gray">#FF2C2C2C</color>
+    <color name="android_studio_neon_blue">#FF3791F4</color>
 
 </resources>

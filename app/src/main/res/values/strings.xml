@@ -3,6 +3,10 @@
     <string name="menu_popularity_text">Sort By: Popularity</string>
     <string name="menu_rating_text">Sort By: Ratings</string>
     <string name="sort_pref">sort_by=popularity.desc</string>
+    <string name="favorites_button_text">Add to Favorites</string>
+    <string name="trailer_text_view">Trailers:</string>
+    <string name="review_text_view">Reviews:</string>
+
 
 
     <string name="hello_blank_fragment">Hello blank fragment</string>

@@ -31,9 +31,7 @@ public class MainActivity extends ActionBarActivity {
 
         int id = item.getItemId();
 
-        //Intent menuIntent = new Intent(this, MainActivityFragment.class);
-        //startActivity(menuIntent);
-        //noinspection SimplifiableIfStatement
+
         if (id == R.id.menu_popularity) {
 
             //menuIntent.putExtra(Intent.EXTRA_TEXT, TMDB_sort_popularity);
