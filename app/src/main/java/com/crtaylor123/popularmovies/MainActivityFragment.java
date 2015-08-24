@@ -1,6 +1,8 @@
 package com.crtaylor123.popularmovies;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
@@ -11,6 +13,10 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +33,9 @@ import retrofit.client.Response;
  */
 public class MainActivityFragment extends Fragment{
 
+
+
+
     /*
         API Key for TheMovieDatabase (www.themoviedb.org)
         Fill in with your own API Key.
@@ -38,8 +47,11 @@ public class MainActivityFragment extends Fragment{
     List<Movie> movieResults;
     String TMDB_sort_popularity = "popularity.desc";
     String TMDB_sort_rating = "vote_average.desc";
+    String TMDB_sort_favorite = "favorite";
+
     static String TMDB_default = "popularity.desc";
     String TMDB_choice;
+    List<Movie> favoritesList= new ArrayList<Movie>();
 
     public MainActivityFragment() {
     }
@@ -94,30 +106,65 @@ public class MainActivityFragment extends Fragment{
             updateMovies();
             return true;
         }
+
+        if (id == R.id.menu_favorites) {
+            TMDB_choice = TMDB_sort_favorite;
+            updateMovies();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 
+
+
     /*
     Method used for running the GetMovies class and updating the GridView layout.
- */
+    */
     private void updateMovies(){
-        getMoviesRetrofit(TMDB_choice);
-        /*GetMoviesTask moviesTask = new GetMoviesTask(this);
-        moviesTask.execute(TMDB_choice);*/
+        if(TMDB_choice.equals(TMDB_sort_favorite)){
+            movieAdapter.clear();
+            movieAdapter.addAll(favoritesList);
+        }
+        else getMoviesRetrofit(TMDB_choice);
     }
 
     @Override
     public void onStart() {
         super.onStart();
+
+        Context context = getActivity();
+        SharedPreferences favorites = context.getSharedPreferences(
+                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        Gson gson = new Gson();
+        String json = favorites.getString("movieList", "");
+        Type type = new TypeToken<List<Movie>>(){}.getType();
+        favoritesList = gson.fromJson(json, type);
+        if(favoritesList == null)
+            favoritesList = new ArrayList<Movie>();
         updateMovies();
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        Context context = getActivity();
+        SharedPreferences favorites = context.getSharedPreferences(
+                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        SharedPreferences.Editor  editor = favorites.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(favoritesList);
+        editor.putString("movieList", json);
+        editor.commit();
+
+    }
+
+
     /*
-        Where everything is first created.
-        Where the movieResults and custom ArrayAdapter, movieAdapter, are defined.
-        Assigns movieAdapter to the GridView.
-        Defines what happens when the user clicks on the movie posters.
-     */
+            Where everything is first created.
+            Where the movieResults and custom ArrayAdapter, movieAdapter, are defined.
+            Assigns movieAdapter to the GridView.
+            Defines what happens when the user clicks on the movie posters.
+         */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 

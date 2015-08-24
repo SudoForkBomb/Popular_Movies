@@ -7,12 +7,27 @@ import android.view.MenuItem;
 
 
 public class MainActivity extends ActionBarActivity {
+    private final String LOG_TAG = MainActivity.class.getSimpleName();
+    private static final String DETAILSACTIVITYFRAGMENT_TAG = "DFTAG";
+
+    private boolean mTwoPane;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if(findViewById(R.id.activity_details_xml) != null){
+            mTwoPane =  true;
+
+            if (savedInstanceState == null) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.activity_details_xml, new DetailsActivityFragment(), DETAILSACTIVITYFRAGMENT_TAG)
+                        .commit();
+            }
+        } else {
+            mTwoPane = false;
+        }
     }
 
 
@@ -44,6 +59,13 @@ public class MainActivity extends ActionBarActivity {
             return false;
         }
 
+        if (id == R.id.menu_popularity) {
+
+            //menuIntent.putExtra(Intent.EXTRA_TEXT, TMDB_sort_popularity);
+            return false;
+        }
+
         return super.onOptionsItemSelected(item);
     }
+
 }

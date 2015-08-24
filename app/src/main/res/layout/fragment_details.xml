@@ -1,9 +1,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.crtaylor123.popularmovies.DetailsActivityFragment"
     android:background="@android:color/black">
 
         <LinearLayout
@@ -64,9 +62,9 @@
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/favorites_button_text"
                 android:id="@+id/addToFavoritesButton"
-                android:padding="5dp" />
+                android:padding="5dp"
+                android:focusable="false" />
 
             <TextView
                 android:layout_width="match_parent"
