@@ -14,9 +14,7 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -181,9 +179,9 @@ public class MainActivityFragment extends Fragment{
                                     int position, long id) {
 
                 final Movie selectedMovie = movieResults.get(position);
-                Intent detailIntent = new Intent(getActivity(), DetailsActivity.class);
+                Intent detailIntent = new Intent(getActivity(), DetailsActivityFragment.class);
                 detailIntent.putExtra("movie", selectedMovie);
-                startActivity(detailIntent);
+                //startActivity(detailIntent);
             }
         });
 
