@@ -14,7 +14,9 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,18 +53,22 @@ public class MainActivityFragment extends Fragment{
     String TMDB_choice;
     List<Movie> favoritesList= new ArrayList<Movie>();
 
+
     public MainActivityFragment() {
     }
 
     /*
-        Checks to see if there if the savedInstanceState is null or if it doesn't contain the ArrayList of Movies.
-        If it is either null or doesn't have contain the movies, it creates a new ArrayList and sets the TMDB_choice to the default search.
-        Else, it restores the ArrayList of Movies and restores the TMDB_choice.
+    Checks to see if there if the savedInstanceState is null or if it doesn't contain the ArrayList of Movies.
+    If it is either null or doesn't have contain the movies, it creates a new ArrayList and sets the TMDB_choice to the default search.
+    Else, it restores the ArrayList of Movies and restores the TMDB_choice.
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+        getFavoritesSharedPreferences();
+
 
         if (savedInstanceState == null || !savedInstanceState.containsKey("key")){
             movieResults = new ArrayList<Movie>();
@@ -72,6 +78,18 @@ public class MainActivityFragment extends Fragment{
             movieResults = savedInstanceState.getParcelableArrayList("key");
             TMDB_choice = savedInstanceState.getString("choice");
         }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        updateMovies();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        saveFavoritesSharedPreferences();
     }
 
     /*
@@ -114,55 +132,12 @@ public class MainActivityFragment extends Fragment{
     }
 
 
-
     /*
-    Method used for running the GetMovies class and updating the GridView layout.
+    Where everything is first created.
+    Where the movieResults and custom ArrayAdapter, movieAdapter, are defined.
+    Assigns movieAdapter to the GridView.
+    Defines what happens when the user clicks on the movie posters.
     */
-    private void updateMovies(){
-        if(TMDB_choice.equals(TMDB_sort_favorite)){
-            movieAdapter.clear();
-            movieAdapter.addAll(favoritesList);
-        }
-        else getMoviesRetrofit(TMDB_choice);
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        Context context = getActivity();
-        SharedPreferences favorites = context.getSharedPreferences(
-                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-        Gson gson = new Gson();
-        String json = favorites.getString("movieList", "");
-        Type type = new TypeToken<List<Movie>>(){}.getType();
-        favoritesList = gson.fromJson(json, type);
-        if(favoritesList == null)
-            favoritesList = new ArrayList<Movie>();
-        updateMovies();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        Context context = getActivity();
-        SharedPreferences favorites = context.getSharedPreferences(
-                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-        SharedPreferences.Editor  editor = favorites.edit();
-        Gson gson = new Gson();
-        String json = gson.toJson(favoritesList);
-        editor.putString("movieList", json);
-        editor.commit();
-
-    }
-
-
-    /*
-            Where everything is first created.
-            Where the movieResults and custom ArrayAdapter, movieAdapter, are defined.
-            Assigns movieAdapter to the GridView.
-            Defines what happens when the user clicks on the movie posters.
-         */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
@@ -178,14 +153,28 @@ public class MainActivityFragment extends Fragment{
             public void onItemClick(AdapterView<?> parent, View v,
                                     int position, long id) {
 
+
                 final Movie selectedMovie = movieResults.get(position);
                 Intent detailIntent = new Intent(getActivity(), DetailsActivityFragment.class);
                 detailIntent.putExtra("movie", selectedMovie);
-                //startActivity(detailIntent);
+                startActivity(detailIntent);
+
+                getFavoritesSharedPreferences();
             }
         });
 
         return rootView;
+    }
+
+    /*
+    Method used for running the GetMovies class and updating the GridView layout.
+    */
+    private void updateMovies(){
+        if(TMDB_choice.equals(TMDB_sort_favorite)){
+            movieAdapter.clear();
+            movieAdapter.addAll(favoritesList);
+        }
+        else getMoviesRetrofit(TMDB_choice);
     }
 
     /*
@@ -238,11 +227,43 @@ public class MainActivityFragment extends Fragment{
                     }
                 }
             }
+
             @Override
             public void failure(RetrofitError error) {
 
             }
         });
+    }
+
+    public void getFavoritesSharedPreferences(){
+        Context context = getActivity();
+        SharedPreferences favorites = context.getSharedPreferences(
+                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+
+        Gson gson = new Gson();
+        String json = favorites.getString("movieList", "");
+
+        Type type = new TypeToken<List<Movie>>() {
+        }.getType();
+
+        favoritesList = gson.fromJson(json, type);
+        if (favoritesList == null)
+            favoritesList = new ArrayList<Movie>();
+
+    }
+
+    public void saveFavoritesSharedPreferences(){
+        Context context = getActivity();
+        SharedPreferences favorites = context.getSharedPreferences(
+                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        SharedPreferences.Editor  editor = favorites.edit();
+
+        Gson gson = new Gson();
+        String json = gson.toJson(favoritesList);
+
+        editor.putString("movieList", json);
+        editor.apply();
+
     }
 }//End of MainActivityFragment
 
