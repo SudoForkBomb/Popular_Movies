@@ -33,14 +33,30 @@ public class DetailsActivityFragment extends Fragment {
     TrailerAdapter trailerAdapter;
     ReviewAdapter reviewAdapter;
     Boolean isFavorite;
-    List<Movie> favoritesList= new ArrayList<Movie>();;
+    Movie movie;
+    List<Movie> favoritesList= new ArrayList<Movie>();
 
     public DetailsActivityFragment() {
     }
 
     @Override
+    public void onSaveInstanceState(Bundle savedInstanceState){
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putParcelable("movie", movie);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+
+        if (savedInstanceState != null) {
+            movie = savedInstanceState.getParcelable("movie");
+        }
+
+    }
+
+    public void getFavoritesSharedPreferences(){
         Context context = getActivity();
         SharedPreferences favorites = context.getSharedPreferences(
                 getString(R.string.preference_file_key), Context.MODE_PRIVATE);
@@ -50,22 +66,6 @@ public class DetailsActivityFragment extends Fragment {
         favoritesList = gson.fromJson(json, type);
         if(favoritesList == null)
             favoritesList = new ArrayList<Movie>();
-    }
-
-    public void getFavoritesSharedPreferences(){
-        Context context = getActivity();
-        SharedPreferences favorites = context.getSharedPreferences(
-                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-
-        Gson gson = new Gson();
-        String json = favorites.getString("movieList", "");
-
-        Type type = new TypeToken<List<Movie>>() {
-        }.getType();
-
-        favoritesList = gson.fromJson(json, type);
-        if (favoritesList == null)
-            favoritesList = new ArrayList<Movie>();
 
     }
 
@@ -74,13 +74,11 @@ public class DetailsActivityFragment extends Fragment {
         SharedPreferences favorites = context.getSharedPreferences(
                 getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         SharedPreferences.Editor  editor = favorites.edit();
-
         Gson gson = new Gson();
         String json = gson.toJson(favoritesList);
-
         editor.putString("movieList", json);
-        editor.apply();
-
+        editor.clear();
+        editor.commit();
     }
 
     @Override
@@ -89,20 +87,26 @@ public class DetailsActivityFragment extends Fragment {
 
         rootView = inflater.inflate(R.layout.fragment_details, container, false);
         Intent intent = getActivity().getIntent();
-        Movie movie = (Movie) intent.getParcelableExtra("movie");
+
+        if(intent.getParcelableExtra("movie") != null)
+            movie = (Movie) intent.getParcelableExtra("movie");
+
         updateDetails(movie);
 
         return rootView;
     }
 
 
+    /*
+    Used to update the Fragment's information.
+     */
 
     public void updateDetails(Movie movieParameter){
 
-        getFavoritesSharedPreferences();
         isFavorite = false;
+        getFavoritesSharedPreferences();
 
-        final Movie movie = movieParameter;
+        movie = movieParameter;
 
 
         if (movie != null) {
@@ -161,6 +165,7 @@ public class DetailsActivityFragment extends Fragment {
                         addToFavoritesButton.setText(R.string.add_favorites_button_text);
 
                     }
+                    saveFavoritesSharedPreferences();
                 }
 
             });

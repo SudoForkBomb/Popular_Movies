@@ -25,8 +25,8 @@
                 android:layout_weight="1" />
 
             <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_height="fill_parent"
                 android:id="@+id/detailedPosterImageView" />
 
             <TextView
@@ -68,7 +68,6 @@
 
             <TextView
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:id="@+id/synopsisTextView"
                 android:shadowColor="#000000"
@@ -78,7 +77,8 @@
                 android:textColor="@android:color/white"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentBottom="true"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:layout_height="wrap_content" />
 
             <View
                 android:background="#ffffff"
@@ -95,7 +95,7 @@
                 android:textColor="@android:color/white"/>
 
             <ListView
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/trailersListView"
                 android:nestedScrollingEnabled="true" />
@@ -116,7 +116,7 @@
 
             <ListView
                 android:layout_width="match_parent"
-                android:layout_height="fill_parent"
+                android:layout_height="wrap_content"
                 android:id="@+id/reviewsListView"
                 android:divider="@color/android_studio_neon_blue"
                 android:nestedScrollingEnabled="true" />

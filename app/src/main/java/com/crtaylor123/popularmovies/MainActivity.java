@@ -15,12 +15,6 @@ public class MainActivity extends ActionBarActivity implements MainActivityFragm
     public boolean mTwoPane;
 
     @Override
-    public void onSaveInstanceState(Bundle savedInstanceState){
-        super.onSaveInstanceState(savedInstanceState);
-    }
-
-
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -38,14 +32,20 @@ public class MainActivity extends ActionBarActivity implements MainActivityFragm
         }
     }
 
+    /*
+    Callback method from MainActivityFragment
+    Creates and instance of the detailsActivityFragment and checks to see if it exists.
+    If not, it's a single pane and calls DetailActivity with an intent.
+    Else, it's a double pane and calls the updateDetails method from detailsActivityFragment.
+     */
     @Override
     public void onItemClicked(Movie movie) {
 
         DetailsActivityFragment detailsActivityFragment = (DetailsActivityFragment) getSupportFragmentManager().findFragmentByTag(DETAILSACTIVITYFRAGMENT_TAG);
-        Intent detailIntent = new Intent(this, DetailsActivity.class);
-        detailIntent.putExtra("movie", movie);
 
         if(detailsActivityFragment == null){
+            Intent detailIntent = new Intent(this, DetailsActivity.class);
+            detailIntent.putExtra("movie", movie);
             startActivity(detailIntent);
         } else {
             detailsActivityFragment.updateDetails(movie);

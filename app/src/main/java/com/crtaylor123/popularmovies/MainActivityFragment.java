@@ -49,13 +49,16 @@ public class MainActivityFragment extends Fragment{
 
     static String TMDB_default = "popularity.desc";
     String TMDB_choice;
-    List<Movie> favoritesList= new ArrayList<Movie>();
+    List<Movie> favoritesList = new ArrayList<Movie>();
 
     OnItemClickListener clickListener;
 
     public MainActivityFragment() {
     }
 
+    /*
+    Callback method used to pass movie information to DetailsFragment from MainActivity
+     */
     public interface OnItemClickListener {
         public void onItemClicked(Movie movie);
 
@@ -73,6 +76,13 @@ public class MainActivityFragment extends Fragment{
         }
     }
 
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        updateMovies();
+    }
+
     /*
     Checks to see if there if the savedInstanceState is null or if it doesn't contain the ArrayList of Movies.
     If it is either null or doesn't have contain the movies, it creates a new ArrayList and sets the TMDB_choice to the default search.
@@ -84,7 +94,6 @@ public class MainActivityFragment extends Fragment{
         setHasOptionsMenu(true);
 
         if (savedInstanceState == null || !savedInstanceState.containsKey("key")){
-            getFavoritesSharedPreferences();
             movieResults = new ArrayList<Movie>();
             TMDB_choice = TMDB_default;
         }
@@ -94,21 +103,9 @@ public class MainActivityFragment extends Fragment{
         }
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        updateMovies();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        saveFavoritesSharedPreferences();
-    }
-
     /*
-        Stores the TMDB_choice with the key "choice" and the movieResults with key "key".
-     */
+    Stores the TMDB_choice with the key "choice" and the movieResults with key "key".
+    */
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState){
         super.onSaveInstanceState(savedInstanceState);
@@ -117,9 +114,9 @@ public class MainActivityFragment extends Fragment{
     }
 
     /*
-        Handles the menu button selections.
-        Assigns the TMDB_choice to a static String, TMDB_default, for when the Activity is recreated during a rotation.
-     */
+    Handles the menu button selections.
+    Assigns the TMDB_choice to a static String, TMDB_default, for when the Activity is recreated during a rotation.
+    */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -137,8 +134,8 @@ public class MainActivityFragment extends Fragment{
         }
 
         if (id == R.id.menu_favorites) {
-            TMDB_choice = TMDB_sort_favorite;
             getFavoritesSharedPreferences();
+            TMDB_choice = TMDB_sort_favorite;
             updateMovies();
             return true;
         }
@@ -155,8 +152,6 @@ public class MainActivityFragment extends Fragment{
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-
-
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         movieAdapter = new MovieAdapter(getActivity(), movieResults);
@@ -169,7 +164,6 @@ public class MainActivityFragment extends Fragment{
                                     int position, long id) {
                 final Movie selectedMovie = movieResults.get(position);
                 clickListener.onItemClicked(selectedMovie);
-                getFavoritesSharedPreferences();
             }
         });
 
@@ -188,8 +182,8 @@ public class MainActivityFragment extends Fragment{
     }
 
     /*
-        Uses the Retrofit library to fetch the TMDB JSON file in the Background.
-        Adds each movie to the movieAdapter on success.
+    Uses the Retrofit library to fetch the TMDB JSON file in the Background.
+    Adds each movie to the movieAdapter on success.
     */
     public void getMoviesRetrofit(String sortChoice){
 
@@ -245,36 +239,42 @@ public class MainActivityFragment extends Fragment{
         });
     }
 
-    public void getFavoritesSharedPreferences(){
-        Context context = getActivity();
-        SharedPreferences favorites = context.getSharedPreferences(
-                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
 
-        Gson gson = new Gson();
-        String json = favorites.getString("movieList", "");
-
-        Type type = new TypeToken<List<Movie>>() {
-        }.getType();
-
-        favoritesList = gson.fromJson(json, type);
-        if (favoritesList == null)
-            favoritesList = new ArrayList<Movie>();
-
-    }
+    /*
+    Used for storing the user's favorite movies in a SharedPreferences file.
+     */
 
     public void saveFavoritesSharedPreferences(){
         Context context = getActivity();
         SharedPreferences favorites = context.getSharedPreferences(
                 getString(R.string.preference_file_key), Context.MODE_PRIVATE);
         SharedPreferences.Editor  editor = favorites.edit();
-
         Gson gson = new Gson();
         String json = gson.toJson(favoritesList);
-
         editor.putString("movieList", json);
-        editor.apply();
+        editor.commit();
 
     }
+
+    /*
+    Used for retrieving the user's favorite movies from the SharedPreferences file.
+     */
+
+    public void getFavoritesSharedPreferences(){
+        Context context = getActivity();
+        SharedPreferences favorites = context.getSharedPreferences(
+                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        Gson gson = new Gson();
+        String json = favorites.getString("movieList", "");
+        Type type = new TypeToken<List<Movie>>(){}.getType();
+        favoritesList = gson.fromJson(json, type);
+        if(favoritesList == null)
+            favoritesList = new ArrayList<Movie>();
+        updateMovies();
+
+    }
+
+
 
 }//End of MainActivityFragment
 
