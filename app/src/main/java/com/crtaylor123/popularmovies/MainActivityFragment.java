@@ -1,7 +1,7 @@
 package com.crtaylor123.popularmovies;
 
+import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -34,8 +34,6 @@ import retrofit.client.Response;
 public class MainActivityFragment extends Fragment{
 
 
-
-
     /*
         API Key for TheMovieDatabase (www.themoviedb.org)
         Fill in with your own API Key.
@@ -53,24 +51,40 @@ public class MainActivityFragment extends Fragment{
     String TMDB_choice;
     List<Movie> favoritesList= new ArrayList<Movie>();
 
+    OnItemClickListener clickListener;
 
     public MainActivityFragment() {
+    }
+
+    public interface OnItemClickListener {
+        public void onItemClicked(Movie movie);
+
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+
+        try {
+            clickListener = (OnItemClickListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement OnItemClickListener");
+        }
     }
 
     /*
     Checks to see if there if the savedInstanceState is null or if it doesn't contain the ArrayList of Movies.
     If it is either null or doesn't have contain the movies, it creates a new ArrayList and sets the TMDB_choice to the default search.
     Else, it restores the ArrayList of Movies and restores the TMDB_choice.
-     */
+    */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
 
-        getFavoritesSharedPreferences();
-
-
         if (savedInstanceState == null || !savedInstanceState.containsKey("key")){
+            getFavoritesSharedPreferences();
             movieResults = new ArrayList<Movie>();
             TMDB_choice = TMDB_default;
         }
@@ -100,7 +114,6 @@ public class MainActivityFragment extends Fragment{
         super.onSaveInstanceState(savedInstanceState);
         savedInstanceState.putString("choice", TMDB_choice);
         savedInstanceState.putParcelableArrayList("key", (ArrayList<? extends Parcelable>) movieResults);
-
     }
 
     /*
@@ -125,6 +138,7 @@ public class MainActivityFragment extends Fragment{
 
         if (id == R.id.menu_favorites) {
             TMDB_choice = TMDB_sort_favorite;
+            getFavoritesSharedPreferences();
             updateMovies();
             return true;
         }
@@ -142,6 +156,7 @@ public class MainActivityFragment extends Fragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
 
+
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         movieAdapter = new MovieAdapter(getActivity(), movieResults);
@@ -152,13 +167,8 @@ public class MainActivityFragment extends Fragment{
 
             public void onItemClick(AdapterView<?> parent, View v,
                                     int position, long id) {
-
-
                 final Movie selectedMovie = movieResults.get(position);
-                Intent detailIntent = new Intent(getActivity(), DetailsActivityFragment.class);
-                detailIntent.putExtra("movie", selectedMovie);
-                startActivity(detailIntent);
-
+                clickListener.onItemClicked(selectedMovie);
                 getFavoritesSharedPreferences();
             }
         });
@@ -265,6 +275,7 @@ public class MainActivityFragment extends Fragment{
         editor.apply();
 
     }
+
 }//End of MainActivityFragment
 
 

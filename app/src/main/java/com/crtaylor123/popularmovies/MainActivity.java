@@ -1,16 +1,24 @@
 package com.crtaylor123.popularmovies;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements MainActivityFragment.OnItemClickListener
+{
     private final String LOG_TAG = MainActivity.class.getSimpleName();
     private static final String DETAILSACTIVITYFRAGMENT_TAG = "DFTAG";
 
-    private boolean mTwoPane;
+    public boolean mTwoPane;
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState){
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +38,21 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
+    @Override
+    public void onItemClicked(Movie movie) {
+
+        DetailsActivityFragment detailsActivityFragment = (DetailsActivityFragment) getSupportFragmentManager().findFragmentByTag(DETAILSACTIVITYFRAGMENT_TAG);
+        Intent detailIntent = new Intent(this, DetailsActivity.class);
+        detailIntent.putExtra("movie", movie);
+
+        if(detailsActivityFragment == null){
+            startActivity(detailIntent);
+        } else {
+            detailsActivityFragment.updateDetails(movie);
+
+        }
+
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
